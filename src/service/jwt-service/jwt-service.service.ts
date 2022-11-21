@@ -11,7 +11,7 @@ export class JwtServiceService {
 
   async generateToken(payLoad: any): Promise<string> {
     const keyId = random.int(1, 5);
-    const { privateKey } = await this.keypairService.getKeyPairFromRedis(keyId);
+    const { privateKey } = await this.keypairService.getOrSetKeyPairToRedis(keyId);
     return jwt.sign(payLoad, privateKey, {
       algorithm: 'RS256',
       header: { type: undefined, key: keyId },

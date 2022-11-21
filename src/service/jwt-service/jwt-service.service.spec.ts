@@ -16,12 +16,23 @@ describe('JwtServiceService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
-    let x = service.generateToken({ id: 'hero' });
-    console.log(x);
   });
 
   it('should generate token', async () => {
-    const x = await service.generateToken({ id: 'hero' });
-    console.log(x);
+    const token = await service.generateToken({ id: 'hero' });
+    expect(token).toBeDefined();
   });
+
+  it('should generate token and decode', async () => {
+    const token = await service.generateToken({ id: 'hero' });
+    const decode = await service.decodeToken(token);
+    expect('hero' == decode['id']).toBeTruthy();
+  });
+
+  it('should throw error', async () => {
+    const token = 'asdasdw.asdawdasdha-asdawd.awwww';
+    const decode = await service.decodeToken(token);
+    expect(decode).toBeNull();
+  });
+
 });

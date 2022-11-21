@@ -9,4 +9,12 @@ export class RedisService {
   async getValueToRedis(key: string): Promise<string> {
     return await redisClient.get(key);
   }
+
+  async checkKeyExist(key: string): Promise<number> {
+    return await redisClient.exists(key);
+  }
+
+  async delKey(key: string): Promise<number> {
+    return await redisClient.del(key);
+  }
 }

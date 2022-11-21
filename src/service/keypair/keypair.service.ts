@@ -10,6 +10,7 @@ import * as sshpk from 'sshpk';
 
 @Injectable()
 export class KeypairService {
+  KEY_PAIR_PREFIX = `keyPair-`;
   constructor(private redisService: RedisService) {}
 
   GenerateKeyPair(): KeyPairSyncResult<string, string> {
@@ -46,7 +47,10 @@ export class KeypairService {
           const base64PrivateKey = this.convertKeyToString(genPrivateKey);
           const keyPairBase64 = { base64PublicKey, base64PrivateKey };
           this.redisService
-            .setValueToRedis(`keyPair-${id}`, JSON.stringify(keyPairBase64))
+            .setValueToRedis(
+              `${this.KEY_PAIR_PREFIX}${id}`,
+              JSON.stringify(keyPairBase64),
+            )
             .then(() => {
               console.log('added to redis');
             });
@@ -121,9 +125,26 @@ export class KeypairService {
     this.generateRsaKey(5);
   }
 
-  async getKeyPairFromRedis(id = 1) {
+  async getOrSetKeyPairToRedis(id = 1): Promise<{
+    publicKey: string;
+    privateKey: string;
+  }> {
+    const check = await this.redisService.checkKeyExist(
+      `${this.KEY_PAIR_PREFIX}${id}`,
+    );
+    if (check > 0) {
+      return await this.getKeyPairFromRedis(id);
+    } else {
+      const keyPair = await this.setKeyPairToRedisSync(id);
+      return { publicKey: keyPair.publicKey, privateKey: keyPair.privateKey };
+    }
+  }
+
+  async getKeyPairFromRedis(
+    id = 1,
+  ): Promise<{ publicKey: string; privateKey: string }> {
     const keyPairString = JSON.parse(
-      await this.redisService.getValueToRedis(`keyPair-${id}`),
+      await this.redisService.getValueToRedis(`${this.KEY_PAIR_PREFIX}${id}`),
     );
 
     return this.convertStringToKeyPair(
