@@ -1,17 +1,15 @@
-import { Injectable } from "@nestjs/common";
-import { MD5, enc } from "crypto-js";
+import { Injectable } from '@nestjs/common';
+import { MD5, enc } from 'crypto-js';
 
-import { DataSource, Repository } from "typeorm";
-import { InjectRepository } from "@nestjs/typeorm";
-import { UserEntity } from "../../model/User/user.entity";
-
+import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from '../../model/User/user.entity';
 
 @Injectable()
 export class LoginService {
   constructor(
-    @InjectRepository(UserEntity) private user: Repository<UserEntity>
-  ) {
-  }
+    @InjectRepository(UserEntity) private user: Repository<UserEntity>,
+  ) {}
 
   encrypt = (text) => {
     return MD5(text).toString(enc.Hex);
@@ -46,10 +44,9 @@ export class LoginService {
   }
 
   async postAuthentication(username, password): Promise<UserEntity[]> {
-
-    const data = await this.user.find({ where: { username, password: this.encrypt(password), isActive: true } });
+    const data = await this.user.find({
+      where: { username, password: this.encrypt(password), isActive: true },
+    });
     return data;
   }
-
-
 }
