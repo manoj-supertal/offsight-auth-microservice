@@ -4,11 +4,13 @@ import { MD5, enc } from 'crypto-js';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../../model/User/user.entity';
+import {JwtServiceService} from "../../service/jwt-service/jwt-service.service";
 
 @Injectable()
 export class LoginService {
   constructor(
     @InjectRepository(UserEntity) private user: Repository<UserEntity>,
+    private jwtService: JwtServiceService
   ) {}
 
   encrypt = (text) => {
@@ -43,10 +45,26 @@ export class LoginService {
     return true;
   }
 
-  async postAuthentication(username, password): Promise<UserEntity[]> {
-    const data = await this.user.find({
+  verifyLogin(username: string, password: string): Promise<UserEntity[]> {
+    return this.user.find({
       where: { username, password: this.encrypt(password), isActive: true },
     });
-    return data;
+  }
+
+  async postAuthentication(username, password) {
+    try{
+      if(!this.isCaptchaVerify()){
+        throw new Error('Captcha not verified');
+      }
+      const data = await this.verifyLogin(username, password);
+      if(data.length<1){
+        throw new Error('Invalid Login Credentials');
+      }
+      console.log(data)
+      const token = await this.jwtService.generateToken({test:'abc'})
+      return { status: true, data: token };
+    } catch (e) {
+      return { status: false, data: e };
+    }
   }
 }
